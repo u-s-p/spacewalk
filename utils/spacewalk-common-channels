@@ -78,7 +78,7 @@ def add_channels(channels, section, arch):
     base_channels = ['']
     optional = ['activationkey', 'base_channel_activationkey', 'gpgkey_url',
                 'gpgkey_id', 'gpgkey_fingerprint', 'yumrepo_url',
-                'yum_repo_label', 'dist_map_release']
+                'yum_repo_label', 'dist_map_release', 'yumrepo_filter' ]
     mandatory = ['label', 'name', 'summary', 'checksum', 'arch', 'section']
 
     if config.has_option(section, 'base_channels'):
@@ -255,6 +255,21 @@ Create everything as well as unlimited activation key for every channel:
                                                        base_info['yumrepo_url'])
                     client.channel.software.associateRepo(key,
                                                           base_info['label'], base_info['yum_repo_label'])
+                     # add repo filters if configured
+                    if 'yumrepo_filter' in child_info:
+                        for f in child_info['yumrepo_filter'].split():
+                            if f[0] not in [ '-', '+' ]:
+                                sys.stderr.write("ERROR: %s: %s\n" % (
+                                    'repo_filter', 'repo_filter must start with + (incl) or - (excl)'))
+                                sys.exit(2)
+                            else:
+                                filterflag = f[0]
+                                packages = f[1:]
+
+                            client.channel.software.addRepoFilter(key,
+                                                        child_info['yum_repo_label'],
+                                                        {'filter': packages,
+                                                         'flag': filterflag})
                 except xmlrpclib.Fault, e:
                     if e.faultCode != 1200:  # ignore if channel exists
                         sys.stderr.write("ERROR: %s: %s\n" % (
@@ -336,6 +351,21 @@ Create everything as well as unlimited activation key for every channel:
                                                        child_info['yumrepo_url'])
                     client.channel.software.associateRepo(key,
                                                           child_info['label'], child_info['yum_repo_label'])
+                    # add repo filters if configured
+                    if 'yumrepo_filter' in child_info:
+                        for f in child_info['yumrepo_filter'].split():
+                            if f[0] not in [ '-', '+' ]:
+                                sys.stderr.write("ERROR: %s: %s\n" % (
+                                    'repo_filter', 'repo_filter must start with + (incl) or - (excl)'))
+                                sys.exit(2)
+                            else:
+                                filterflag = f[0]
+                                packages = f[1:]
+
+                            client.channel.software.addRepoFilter(key,
+                                                        child_info['yum_repo_label'],
+                                                        {'filter': packages,
+                                                         'flag': filterflag})
                 except xmlrpclib.Fault, e:
                     if e.faultCode != 1200:  # ignore if channel exists
                         sys.stderr.write("ERROR: %s: %s\n" % (
